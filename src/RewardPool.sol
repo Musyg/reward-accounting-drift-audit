@@ -3,13 +3,13 @@ pragma solidity 0.8.34;
 
 import {MockERC20} from "./MockERC20.sol";
 
-/// @title RewardPool (vulnerable)
+/// @title RewardPool (remediated)
 /// @notice A MasterChef-style single staking pool. Rewards stream at a fixed rate and are
 ///         split across stakers in proportion to staked amount and time, using the standard
 ///         accRewardPerShare / rewardDebt accounting.
-/// @dev INTENTIONALLY VULNERABLE. `deposit` mutates the stake and sets `rewardDebt` without
-///      first calling `updatePool`, so it snapshots a stale accumulator. A late depositor is
-///      then credited for rewards that accrued before they joined. Do not deploy.
+/// @dev `deposit` now settles the accumulator with `updatePool()` before touching the
+///      stake, so `rewardDebt` is snapshotted against the current rate. A late depositor is
+///      credited only from the moment they join.
 contract RewardPool {
     uint256 private constant ACC = 1e12;
 
@@ -46,8 +46,8 @@ contract RewardPool {
         lastRewardTime = block.timestamp;
     }
 
-    /// @dev BUG: no `updatePool()` before touching `amount` / `rewardDebt`.
     function deposit(uint256 amount) external {
+        updatePool();
         UserInfo storage u = users[msg.sender];
         if (u.amount > 0) {
             uint256 pending = (u.amount * accRewardPerShare) / ACC - u.rewardDebt;

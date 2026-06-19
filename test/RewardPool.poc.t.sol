@@ -29,20 +29,17 @@ contract RewardPoolPoC is Test {
         stake.approve(address(pool), type(uint256).max);
     }
 
-    /// Alice is the sole staker for 100 seconds, so she alone earns those 100 reward tokens.
-    /// The attacker deposits at the very end and harvests half of them.
-    function test_accountingDrift_stealsAccruedRewards() public {
+    /// Same scenario as master. The deposit now settles the accumulator first, so the late
+    /// depositor is credited from zero and Alice keeps the rewards she actually earned.
+    function test_accountingDrift_isFixed() public {
         vm.prank(alice);
         pool.deposit(100 ether);
 
-        // 100 seconds pass: 100 reward tokens accrue, all owed to Alice.
         vm.warp(block.timestamp + 100);
 
-        // Attacker deposits without triggering updatePool, snapshotting a stale accumulator.
         vm.prank(attacker);
         pool.deposit(100 ether);
 
-        // Attacker harvests immediately (no extra time staked).
         vm.prank(attacker);
         pool.harvest();
 
@@ -56,8 +53,7 @@ contract RewardPoolPoC is Test {
         console2.log("attacker harvested (wei):", attackerReward);
         console2.log("alice harvested   (wei):", aliceReward);
 
-        // The attacker, staked for zero of the accrual window, walks away with ~half.
-        assertApproxEqAbs(attackerReward, 50 ether, 1e6, "attacker stole accrued rewards");
-        assertApproxEqAbs(aliceReward, 50 ether, 1e6, "alice short by what the attacker took");
+        assertEq(attackerReward, 0, "attacker earns nothing from before joining");
+        assertApproxEqAbs(aliceReward, 100 ether, 1e6, "alice keeps the full accrued amount");
     }
 }
