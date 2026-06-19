@@ -1,5 +1,7 @@
 # Reward Accounting Drift, Demonstration Security Review
 
+![tests](https://github.com/Musyg/reward-accounting-drift-audit/actions/workflows/ci.yml/badge.svg)
+
 A self-contained demonstration of a smart-contract security review: a deliberately
 vulnerable MasterChef-style staking pool whose `deposit` snapshots a stale reward
 accumulator, the reward theft it allows (proven with a passing
