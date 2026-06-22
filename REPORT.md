@@ -91,17 +91,17 @@ the normal state of an active pool.
 
 ---
 
-## Informational, Gas & Non-Critical
+## Informational & Gas
 
-## N-01, No events on state changes (Non-Critical)
+## I-01, No events on state changes (Informational)
 
 `deposit`, `harvest` and `updatePool` (L50, L62, L38) mutate stakes and pay rewards without emitting any event, leaving pool activity untraceable off-chain. Add `Deposit`, `Harvest` and `PoolUpdated` events.
 
-## I-01, Unchecked ERC20 return values (Informational)
+## I-02, Unchecked ERC20 return values (Informational)
 
 `rewardToken.transfer` (L54, L66) and `stakeToken.transferFrom` (L56) ignore the boolean return value. A non-reverting, non-conforming token would fail silently and desynchronise accounting. Use OpenZeppelin `SafeERC20`.
 
-## I-02, Reward-paying paths are not reentrancy-guarded (Informational)
+## I-03, Reward-paying paths are not reentrancy-guarded (Informational)
 
 `deposit` and `harvest` (L50, L62) make external token calls while mutating user accounting and carry no `nonReentrant` guard. Independently of the main accumulator finding, add a reentrancy guard as defense in depth.
 
